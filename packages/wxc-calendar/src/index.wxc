@@ -1,0 +1,714 @@
+<template>
+  <wxc-popup animation-mode="{{enterDirectionClass}}" align="{{enterDirectionClass}}" class="_c_pop" locked="true">
+
+    <view class="wxc-calendar">
+      <view class="top">
+        <view class="header">
+          <wxc-icon color="{{color}}" size="22" type="close" bindtap="hide"></wxc-icon>
+          <view class="title">{{title}}</view>
+          <view style="visibility: {{selected.length > 0 ? 'visible' : 'hidden'}}; color: {{color}};" class="clear-btn" bindtap="clearSelect">清除</view>
+        </view>
+        <view class="week-panel">
+          <view wx:for="{{weekdaysMin}}" wx:key="{{index}}">{{item}}</view>
+        </view>
+      </view>
+      
+      <scroll-view scroll-y class="content" scroll-top="{{scrollTop}}" lower-threshold="400" bindscrolltolower="scrollToLower">
+        <view wx:for="{{dayMap}}" class="a-month" wx:key="{{item.title}}">
+          <view class="title">
+            {{item.title}}
+          </view>
+
+          <view wx:for="{{item.days}}" wx:for-item="line" class="line {{rowSize}}" wx:key="{{item.title}}">
+            <view wx:for="{{line}}" wx:for-item="lineItem" wx:key="{{lineItem.year}}-{{lineItem.month}}-{{lineItem.day}}" class="col {{weekIndex === 0 || weekIndex === 6 ? 'gray' : ''}}" wx:for-index="weekIndex">
+              <view style="{{extraData.selected[lineItem.key] ? 'background: ' + color + ';' : ''}}" class="day {{lineItem.type}} {{extraData.selected[lineItem.key]}} {{dateExtra[lineItem.key].disable === true ? 'disable' : ''}}" data-day="{{lineItem.day}}" data-month="{{lineItem.month}}" data-year="{{lineItem.year}}" bindtap="select" wx:if="{{lineItem.type !== 'hidden'}}" >
+                {{dateExtra[lineItem.key].replace ? dateExtra[lineItem.key].replace : lineItem.day}}
+                <text wx:if="{{dateExtra[lineItem.key].tag}}" class="tag" style="background: {{color}}; color: {{fontColor}}">{{dateExtra[lineItem.key].tag}}</text>
+              </view>
+              <rich-text class="info" wx:if="{{lineItem.type !== 'hidden'}}" nodes="{{dateExtra[lineItem.key].rtext ? dateExtra[lineItem.key].rtext : '　'}}" ></rich-text>
+            </view>
+          </view>
+        </view>
+    
+      </scroll-view>
+      <view class="confirm-panel" wx:if="{{selected.length > 0}}">
+        <view wx:if="{{type !== 'one'}}" class="box">
+          <view>{{returnData[0]}}</view>
+          <view>{{returnData[1]}}</view>
+        </view>
+        <view class="btn" style="background: {{color}}; color: {{fontColor}}" bindtap="ok">{{(type === 'one' || returnData.length == 2) ? '确定' : '选当天'}}</view>
+      </view>
+    </view>
+    
+  </wxc-popup>
+  
+</template>
+
+<script>
+import moment from 'moment'
+import 'moment/locale/zh-cn'
+
+export default {
+  config: {
+    usingComponents: {
+      'wxc-icon': '@minui/wxc-icon',
+      'wxc-popup': '@minui/wxc-popup',
+    }
+  },
+  options: {
+  },
+  behaviors: [ ],
+  properties: {
+    /**
+     * 入场方向 vertical: 垂直 horizontal: 水平
+     * */
+    enterDirection: {
+      type: String, 
+      value: 'vertical'
+    },
+    /**
+     * 语言本地化
+     */
+    locale: {
+      type: String, 
+      value: 'zh-cn', 
+    },
+    /**
+     * 标题
+     */
+    title: {
+      type: String,
+      value: '日期选择'
+    },
+    /**
+     * 选择类型 one: 单日 range: 日期区间
+     */
+    type: {
+      type: String,
+      value: 'range',
+    },
+    /**
+     * 	主颜调
+     */
+    color: {
+      type: String,
+      value: '#068EEF',
+    },
+          
+    fontColor: {
+      type: String,
+      value: '#FFFFFF',
+    },
+
+    /**
+     * 显示开始日期
+     */
+    defaultDate: {
+      type: String,
+      value: new Date()
+    },
+    /**
+     * 日期扩展数据
+     */
+    dateExtra: {
+      type: Object,
+      value: {},
+    },
+
+    /**
+     * 无限滚动
+     */
+    infiniteOpt: {
+      type: Boolean,
+      value: false,
+    },
+
+    /**
+     * 初始化月个数
+     */
+    initalMonths: {
+      type: Number,
+      value: 6,
+    },
+
+    /**
+     * 最大可选日期
+     */
+    maxDate: {
+      type: String,
+      value: null,
+    },
+
+    /**
+     * 最小可选日期
+     */
+    minDate: {
+      type: String,
+      value: null,
+    },
+
+    /**
+     * 行大小
+     * 'normal' | 'xl'
+     */
+    rowSize: {
+      type: String,
+      value: 'normal',
+    },
+
+    defaultValue: {
+      type: Array,
+      value: [],
+    },
+
+  },
+  data: {
+    enterDirectionClass: 'bottom',
+    weekdaysMin: [],
+    dayMap: [],
+    selected: [],
+    extraData: {
+    },
+    nextMonth: null,
+    scrollTop: 0,
+    visible: false,
+  },
+
+  methods: {
+    hide() {
+      this.popupComponent && this.popupComponent.hide();
+      this.triggerEvent('onCancel')
+    },
+
+    translateDirection() {
+      let enterDirectionClass = 'bottom';
+      if (this.data.enterDirection === 'vertical') {
+        enterDirectionClass = 'bottom'
+      } else {
+        enterDirectionClass = 'right'
+      }
+      this.setData({
+        enterDirectionClass,
+      })
+    },
+
+    show() {
+      this.handleExtraData(); 
+      setTimeout(() => {
+        this.popupComponent && this.popupComponent.show();
+      }, 500);
+    },
+
+    handleExtraData() {
+      const selected = this.data.selected.map(i => i.format('YYYY-MM-DD')).map(i => moment(i));
+      if (selected.length === 1) {
+        const data = {}
+        data[selected[0].format('YYYY-MM-DD')] = 'selected';
+        this.setData({
+          'extraData.selected': data,
+        })
+      } else if(selected.length === 2) {
+        const data = {}
+        data[selected[0].format('YYYY-MM-DD')] = 'selected';
+        data[selected[1].format('YYYY-MM-DD')] = 'selected';
+
+        if (Object.keys(data).length > 1) {
+          selected[0].add(1, 'd')
+          while (selected[0].isBefore(selected[1])) {
+            data[selected[0].format('YYYY-MM-DD')] = 'selected';
+            selected[0].add(1, 'd')  
+          }
+          data[Object.keys(data)[0]] += ' start';
+          data[Object.keys(data)[1]] += ' end';
+
+          for (const key in data) {
+            if (data.hasOwnProperty(key)) {
+              const current = moment(key, 'YYYY-MM-DD');
+              if (current.weekday() === 6 || 1 === current.date()) {
+                data[key] += ' start';
+              } else if (current.weekday() === 5 || current.daysInMonth() === current.date()) {
+                data[key] += ' end';
+              } else {
+                data[key] += ' full';            
+              }
+
+              if (current.weekday() === 5 && 1 === current.date()) {
+                data[key] = 'selected';        
+              }
+
+              if (current.weekday() === 6 && current.daysInMonth() === current.date()) {
+                data[key] = 'selected';        
+              }
+
+              if (data[key].indexOf('start') > -1 && data[key].indexOf('end') > -1) {
+                data[key] = 'selected';        
+              }
+
+            }
+          }
+
+        }
+     
+        this.setData({
+          'extraData.selected': data,
+        })
+
+      } else {
+        this.setData({
+          'extraData.selected': {},
+        })
+      }
+
+    },
+
+    buildDayMap(startDate) {
+      console.log('buildDayMap', startDate, this.data.initalMonths);
+      const dayMap = this.data.dayMap;
+      let nextMonth = null;
+      for (let index = 0; index < this.data.initalMonths; index++) {
+        const date = moment(startDate).add(index, 'M').startOf('month').format('YYYY-MM-DD');
+        const toMonthDays = this.monthDay(date);
+        dayMap.push({
+          title: moment(date).format('LL').slice(0, moment(date).format('LL').length - 2),
+          days: toMonthDays,
+        })
+        nextMonth = moment(date).add(1, 'M').startOf('month').format('YYYY-MM-DD');
+      }
+      this.setData({
+        dayMap,
+        nextMonth,
+      })
+    },
+
+    monthDay(date) {
+      const daysArr = []; // 6*7的日历数组
+      const thisMonth = moment(date);      
+      let currentWeekday = moment(date).date(1).weekday(); // 获取当月1日为星期几
+      const lastMonthDays = moment(date).subtract(1, 'month').daysInMonth(); // 获取上月天数
+      const currentMonthDays = moment(date).daysInMonth(); // 获取当月天数
+      const perMonth = moment(date).subtract(1, 'm');
+
+      let minDate = null, maxDate = null;
+      if (this.data.maxDate !== null && this.data.minDate !== null) {
+        minDate = moment(this.data.minDate);
+        maxDate = moment(this.data.maxDate);
+      }
+      currentWeekday = currentWeekday === 6 ? 0 : currentWeekday + 1;
+      let j = 0;
+      do {
+        if (!daysArr[j]) {
+          daysArr[j] = [];
+        }
+      
+        for (let i = 0; i < 7; i += 1) {
+          const day = (7 * j + i) - (currentWeekday - 1);
+          if (day <= 0) {
+            daysArr[j][i] = {
+              day,
+              month: perMonth.month() + 1,
+              year: perMonth.year(),
+              type: 'hidden',
+              key: '',
+            }
+            continue;
+          }
+
+          if (day > 0 && day <= currentMonthDays) {
+            const currentDay = moment(`${moment(date).year()}-${moment(date).month() + 1}-${day}`, 'YYYY-MM-DD');
+            let type = 'normal';
+            if (minDate !== null && maxDate !== null) {
+              if (currentDay.isBefore(minDate, 'day')) {
+                type = 'disable';
+              }
+
+              if (currentDay.isAfter(maxDate, 'day')) {
+                type = 'disable';
+              }
+            }
+            
+            daysArr[j][i] = {
+              day,
+              month: thisMonth.month() + 1,     
+              year: thisMonth.year(),  
+              type,
+              key: currentDay.format('YYYY-MM-DD'),
+            }
+          }
+          if (day >= currentMonthDays) {
+            j = 100;
+          }
+        }
+        j++;
+      } while (j < 10);
+      
+      
+      const _ = daysArr[daysArr.length - 1].length;
+      const __ = 7 - _;
+      for (let index = 0; index < __; index++) {
+        daysArr[daysArr.length - 1].push({
+          day: 0,
+          month: 0,
+          year: 0,
+          type: 'hidden',
+          key: '',
+        })
+      }
+      
+      return daysArr;
+    },
+
+    select(e) {
+      console.log(e);
+      
+      const { day, month, year } = e.currentTarget.dataset;
+      const currentDay = moment(`${year}-${month}-${day}`, 'YYYY-MM-DD');
+      if (this.data.maxDate !== null && this.data.minDate !== null) {
+        if (currentDay.isBefore(moment(this.data.minDate), 'day')) {
+          return;
+        }
+        if (currentDay.isAfter(moment(this.data.maxDate), 'day')) {
+          return;
+        }
+      }
+
+      if (this.isDisable(currentDay)) {
+        return;
+      }
+
+      let newSelected = [];
+      if (this.data.type === 'one') {
+        newSelected = [currentDay];
+      } else {
+        if (this.data.selected.length === 0 || this.data.selected.length === 2) {
+          newSelected = [currentDay];
+        } else {
+          newSelected = [...this.data.selected, currentDay].sort((a, b) => {
+            return a.diff(b, 'd') > 0;
+          })
+
+          if (this.hasDisableBetween(newSelected[0], newSelected[1])) {
+            newSelected = [];
+        }
+        }
+      }
+
+      
+
+      const returnData = newSelected.map(i => `${i.format('YYYY-MM-DD')} ${moment.weekdays(i.weekday())}`);
+      
+      this.setData({
+        selected: newSelected,
+        returnData,
+      })
+
+      this.handleExtraData();      
+      
+    },
+
+    isDisable(date) {
+      for (const key in this.data.dateExtra) {
+        if (this.data.dateExtra.hasOwnProperty(key)) {
+          const item = this.data.dateExtra[key];
+          if (item.disable === true) {
+            if (date.isSame(key, 'day')) {
+              return true;
+            }
+          }
+        }
+      }
+
+      return false;
+    },
+
+    hasDisableBetween(start, end) {
+      for (const key in this.data.dateExtra) {
+        if (this.data.dateExtra.hasOwnProperty(key)) {
+          const item = this.data.dateExtra[key];
+          if (item.disable === true) {
+            if (moment(key).isBetween(start, end, 'day')) {
+              return true;
+            }
+          }
+        }
+      }
+
+      return false;
+    },
+
+    scrollToLower() {
+      if (this.data.infiniteOpt === true && this.data.nextMonth !== null) {
+        this.buildDayMap(this.data.nextMonth)
+      }
+    },
+
+    clearSelect() {
+      this.setData({
+        selected: [],
+      })
+      this.handleExtraData();
+    },
+
+    ok() {
+      const returnData = this.data.selected.map(i => {
+        return i.format('YYYY-MM-DD');
+      });
+      
+      
+      if (this.data.type === 'one' && returnData.length === 1) {
+        this.triggerEvent('onSelect', returnData);
+        this.popupComponent && this.popupComponent.hide();
+      }
+
+      if (this.data.type !== 'one' && returnData.length > 0) {
+        if (returnData.length === 1) {
+          returnData[1] = returnData[0]
+        }
+        this.triggerEvent('onSelect', returnData);
+        this.popupComponent && this.popupComponent.hide();
+      }
+    }
+  },
+
+  ready() {
+    this.popupComponent = this.selectComponent('._c_pop');
+
+    moment.locale(this.data.locale);
+    
+    let initalMonths = this.data.initalMonths;
+    if (this.data.infiniteOpt === true) {
+      initalMonths = 6;
+    }
+
+    const data = {};
+    
+    if (Array.isArray(this.data.defaultValue)) {
+      let defaultValue = this.data.defaultValue.map(i => moment(i)).sort((a, b) => (a.diff(b, 'd') > 0));
+
+      if (defaultValue.length === 1 && this.isDisable(moment(defaultValue[0]))) {
+        defaultValue = []
+      }
+      
+      if (
+          defaultValue.length === 2 && 
+          (
+            this.isDisable(moment(defaultValue[0])) || 
+            this.isDisable(moment(defaultValue[1])) || 
+            this.hasDisableBetween(defaultValue[0], defaultValue[1])
+          )
+        ) {
+        defaultValue = [];
+      }
+
+      data.selected = defaultValue;
+      data.returnData = defaultValue.map(i => `${i.format('YYYY-MM-DD')} ${moment.weekdays(i.weekday())}`);
+    }
+
+    data.weekdaysMin = moment.weekdaysMin();
+    data.initalMonths = initalMonths;
+
+
+    this.translateDirection();
+
+    this.setData(data)
+
+    this.buildDayMap(this.data.defaultDate);  
+    
+  },
+}
+
+
+</script>
+
+<style>
+
+.wxc-calendar {
+  height: 100%;
+  width: 100%;
+  /* position: fixed; */
+  /* left: 0rpx; */
+  /* top: 0rpx; */
+  background: #FFFFFF;
+  /* z-index: 9999; */
+  flex-direction: column;
+  display: flex;
+  /* visibility: hidden; */
+  /* transform: translate3d(100%, 100%, 0); */
+}
+
+
+
+.wxc-calendar .top{
+  width: 750rpx;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 0 20rpx;
+  border-bottom: 1rpx #ddd solid;  
+}
+
+.wxc-calendar .top .header{
+  width: 100%;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.wxc-calendar .top .header .title{
+  flex-grow: 1;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+.wxc-calendar .top .header .clear-btn{
+  font-size: 22rpx;
+  color: #068EEF;
+}
+.wxc-calendar .top .week-panel{
+  width: 100%;
+  height: 50rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  font-size: 28rpx;
+}
+
+.wxc-calendar .top .week-panel view:first-child,.wxc-calendar .top .week-panel view:last-child{
+  color: #bbb;
+}
+
+.wxc-calendar .content{
+  flex-grow: 1;
+  height: calc(100% - 86rpx - 86rpx);
+}
+
+.wxc-calendar .confirm-panel{
+  width: 750rpx;
+  height: 106rpx;
+  display: flex;
+  padding: 8rpx 15rpx;
+  box-sizing: border-box;
+  border-top: #ddd 1rpx solid;
+}
+.wxc-calendar .confirm-panel .box{
+  width: 520rpx;
+  height: 100%;
+  font-size: 24rpx;
+}
+.wxc-calendar .confirm-panel .btn{
+  height: 100%;
+  flex-grow: 1;
+  border-radius: 10rpx;
+  color: #fff;
+  font-size: 36rpx;
+  background: #108ee9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.wxc-calendar .confirm-panel .btn.disable{
+  color: #bbb;
+  background: #ddd;
+}
+.wxc-calendar .content .a-month{
+  box-sizing: border-box;
+  padding: 0 20rpx;
+}
+
+.wxc-calendar .content .a-month .title{
+  margin: 0;
+  padding: 21rpx 0 6rpx 15rpx;
+  font-size: 28rpx;
+}
+
+
+.wxc-calendar .content .a-month .line{
+  display: flex;
+  box-sizing: border-box;  
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wxc-calendar .content .a-month .line.normal{
+  height: 104rpx;
+}
+
+
+.wxc-calendar .content .a-month .line.xl{
+  height: 124rpx;
+}
+
+.wxc-calendar .content .a-month .line .col {
+  width: 104rpx;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.wxc-calendar .content .a-month .line .col.gray{
+  color: #bbb;
+}
+
+.wxc-calendar .content .a-month .line .col .day{
+  text-align: center;
+  line-height: 70rpx;
+  width: 70rpx;
+  height: 70rpx;
+  white-space: nowrap;
+  font-size: 24rpx;
+  /* position: relative; */
+}
+.wxc-calendar .content .a-month .line .col .day .tag{
+  /* position: absolute; */
+  display: inline-block;
+  text-align: center;
+  height: 20rpx;
+  width: 20rpx;
+  /* bottom: 10rpx; */
+  /* right: 10rpx; */
+  font-size: 18rpx;
+  border-radius: 5rpx;
+  line-height: 20rpx;
+}
+.wxc-calendar .content .a-month .line .col .selected{
+  border-radius: 100%;
+  color: #FFFFFF;
+  background: #108ee9;
+}
+
+.wxc-calendar .content .a-month .line .col .selected.full{
+  width: 100%;
+  border-radius: 0;
+}
+
+.wxc-calendar .content .a-month .line .col .selected.start{
+  width: 100%;
+  border-radius: 70rpx 0 0 70rpx;
+}
+
+.wxc-calendar .content .a-month .line .col .selected.end{
+  width: 100%;
+  border-radius: 0 70rpx 70rpx 0;
+}
+.wxc-calendar .content .a-month .line .col .disable{
+  color: #bbb;
+  background: #eee;
+  border: none;
+  border-radius: 100%;
+}
+
+.wxc-calendar .content .a-month .line .info{
+  width: 100%;
+  font-size: 20rpx;
+  color: #888;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  text-align: center;
+}
+
+</style>

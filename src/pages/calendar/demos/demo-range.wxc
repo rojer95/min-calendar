@@ -1,0 +1,94 @@
+<template>
+  <view>
+    <wxc-calendar 
+      class="wxc-calendar"
+      enterDirection="horizontal" 
+      defaultDate="2017-01-01" 
+      dateExtra="{{dateExtra}}"
+      minDate="2017-02-01"       
+      maxDate="2999-01-01"
+      type="range"
+      defaultValue="{{defaultValue}}"
+      rowSize="xl"
+      infiniteOpt="true"
+      bind:onCancel="onCancel" 
+      bind:onSelect="onSelect"
+      title="请选择日期范围"
+      color="red"
+      fontColor="#FFF"
+    ></wxc-calendar>
+    <button bindtap="open">打开</button>
+    
+  </view>
+</template>
+
+<script>
+export default {
+  config: {
+    usingComponents: {
+      'wxc-calendar': 'wxc-calendar'
+    }
+  },
+  data: {
+    dateExtra: {
+      '2017-02-01': {
+        rtext: '<p style="color: red;">9.9折</p>'
+      },
+      '2017-02-02': {
+        rtext: '￥110.11'
+      },
+      '2017-02-03': {
+        rtext: '锁定',
+        disable: true,
+      },
+      '2017-05-01': {
+        replace: '劳',
+        tag: '休',
+        rtext: '￥110.11'
+        
+      },
+      '2017-05-02': {
+        tag: '休',
+        rtext: '￥110.11'
+      },
+      '2017-05-03': {
+        tag: '休',
+        rtext: '￥110.11'        
+      }
+    },
+    defaultValue: [
+      '2017-02-10',      
+      '2017-02-03',
+    ]
+  },
+  methods: {
+    open() {
+      let calendarComponent = this.selectComponent('.wxc-calendar')
+      calendarComponent && calendarComponent.show();
+    },
+
+    onCancel() {
+      wx.showToast({
+        title: '关闭窗口',
+        icon: 'none',
+        duration: 2000
+      })
+    },
+
+    onSelect(data) {
+      this.setData({
+        defaultValue: data.detail
+      })
+
+      wx.showToast({
+        title: data.detail.join(' ~ '),
+        icon: 'none',
+        duration: 2000
+      })
+    }
+  },
+}
+</script>
+
+<style>
+</style>

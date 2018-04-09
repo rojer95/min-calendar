@@ -1,0 +1,59 @@
+<template>
+  <view>
+    <wxc-calendar 
+      class="wxc-calendar"
+      enterDirection="vertical" 
+      defaultDate="{{defaultDate}}" 
+      type="one"
+      defaultValue="{{defaultValue}}"
+      bind:onCancel="onCancel" 
+      bind:onSelect="onSelect"
+      locale="en-au"      
+    ></wxc-calendar>
+    <button bindtap="open">打开</button>
+    
+  </view>
+</template>
+
+<script>
+import moment from 'moment'
+export default {
+  config: {
+    usingComponents: {
+      'wxc-calendar': 'wxc-calendar'
+    }
+  },
+  data: {
+    defaultDate: moment().format(),
+    defaultValue: [new Date()],
+  },
+  methods: {
+    open() {
+      let calendarComponent = this.selectComponent('.wxc-calendar')
+      calendarComponent && calendarComponent.show();
+    },
+
+    onCancel() {
+      wx.showToast({
+        title: '关闭窗口',
+        icon: 'none',
+        duration: 2000
+      })
+    },
+
+    onSelect(data) {
+      this.setData({
+        defaultValue: data.detail
+      })
+      wx.showToast({
+        title: data.detail.join(''),
+        icon: 'none',
+        duration: 2000
+      })
+    }
+  },
+}
+</script>
+
+<style>
+</style>

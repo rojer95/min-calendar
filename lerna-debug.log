@@ -1,0 +1,22 @@
+0 silly input [ 'publish' ]
+1 silly flags { exact: true,
+1 silly flags   message: 'Publish by MinDev',
+1 silly flags   scope: 'wxc-calendar' }
+2 verbose rootPath D:\work\min-calendar
+3 silly isInitialized
+4 silly isInitialized true
+5 silly existsSync D:\work\min-calendar\VERSION
+6 info scope wxc-calendar
+7 silly initialize attempt
+8 silly isDetachedHead
+9 silly getCurrentBranch
+10 error initialize caught error
+11 error Error: fatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.
+11 error Use '--' to separate paths from revisions, like this:
+11 error 'git <command> [<revision>...] -- [<file>...]'
+11 error
+11 error     at Function.module.exports.sync (C:\Users\win\AppData\Local\Yarn\Data\global\node_modules\lerna\node_modules\execa\index.js:303:26)
+11 error     at Function.execSync (C:\Users\win\AppData\Local\Yarn\Data\global\node_modules\lerna\lib\ChildProcessUtilities.js:59:30)
+11 error     at Function.getCurrentBranch (C:\Users\win\AppData\Local\Yarn\Data\global\node_modules\lerna\lib\GitUtilities.js:203:59)
+11 error     at Function.isDetachedHead (C:\Users\win\AppData\Local\Yarn\Data\global\node_modules\lerna\lib\GitUtilities.js:45:37)
+11 error     at PublishCommand.initialize (C:\Users\win\AppData\Local\Yarn\Data\global\node_modules\lerna\lib\commands\PublishCommand.js:260:36)
