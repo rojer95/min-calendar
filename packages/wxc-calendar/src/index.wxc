@@ -265,7 +265,7 @@ export default {
     },
 
     buildDayMap(startDate) {
-      console.log('buildDayMap', startDate, this.data.initalMonths);
+      // console.log('buildDayMap', startDate, this.data.initalMonths);
       const dayMap = this.data.dayMap;
       let nextMonth = null;
       for (let index = 0; index < this.data.initalMonths; index++) {
@@ -361,7 +361,7 @@ export default {
     },
 
     select(e) {
-      console.log(e);
+      // console.log(e);
       
       const { day, month, year } = e.currentTarget.dataset;
       const currentDay = moment(`${year}-${month}-${day}`, 'YYYY-MM-DD');
