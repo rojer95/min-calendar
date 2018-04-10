@@ -1,6 +1,6 @@
 {
   "name": "wxc-calendar",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "日历组件 - 小程序组件",
   "main": "dist/index.js",
   "scripts": {},
@@ -8,7 +8,12 @@
     "type": "git",
     "url": "https://github.com/meili/minui/tree/master/packages/wxc-calendar"
   },
-  "author": "",
+  "author": "rojerchen",
+  "dependencies": {
+    "@minui/wxc-icon": "^1.0.8",
+    "@minui/wxc-popup": "^1.0.8",
+    "moment": "^2.22.0"
+  },
   "license": "MIT",
   "minConfig": {
     "component": true
