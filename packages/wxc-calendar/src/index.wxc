@@ -23,7 +23,7 @@
             <view wx:for="{{line}}" wx:for-item="lineItem" wx:key="{{lineItem.year}}-{{lineItem.month}}-{{lineItem.day}}" class="col {{weekIndex === 0 || weekIndex === 6 ? 'gray' : ''}}" wx:for-index="weekIndex">
               <view style="{{extraData.selected[lineItem.key] ? 'background: ' + color + ';' : ''}}" class="day {{lineItem.type}} {{extraData.selected[lineItem.key]}} {{dateExtra[lineItem.key].disable === true ? 'disable' : ''}}" data-day="{{lineItem.day}}" data-month="{{lineItem.month}}" data-year="{{lineItem.year}}" bindtap="select" wx:if="{{lineItem.type !== 'hidden'}}" >
                 {{dateExtra[lineItem.key].replace ? dateExtra[lineItem.key].replace : lineItem.day}}
-                <text wx:if="{{dateExtra[lineItem.key].tag}}" class="tag" style="background: {{color}}; color: {{fontColor}}">{{dateExtra[lineItem.key].tag}}</text>
+                <!-- <text wx:if="{{dateExtra[lineItem.key].tag}}" class="tag" style="background: {{color}}; color: {{fontColor}}">{{dateExtra[lineItem.key].tag}}</text> -->
               </view>
               <view class="info">
                 <rich-text wx:if="{{lineItem.type !== 'hidden'}}" nodes="{{dateExtra[lineItem.key].rtext ? dateExtra[lineItem.key].rtext : ''}}"></rich-text>
