@@ -25,7 +25,10 @@
                 {{dateExtra[lineItem.key].replace ? dateExtra[lineItem.key].replace : lineItem.day}}
                 <text wx:if="{{dateExtra[lineItem.key].tag}}" class="tag" style="background: {{color}}; color: {{fontColor}}">{{dateExtra[lineItem.key].tag}}</text>
               </view>
-              <rich-text class="info" wx:if="{{lineItem.type !== 'hidden'}}" nodes="{{dateExtra[lineItem.key].rtext ? dateExtra[lineItem.key].rtext : '　'}}" ></rich-text>
+              <view class="info">
+                <rich-text wx:if="{{lineItem.type !== 'hidden'}}" nodes="{{dateExtra[lineItem.key].rtext ? dateExtra[lineItem.key].rtext : ''}}"></rich-text>
+                <text wx:if="{{dateExtra[lineItem.key].tag}}" class="tag" style="background: {{color}}; color: {{fontColor}}">{{dateExtra[lineItem.key].tag}}</text>
+              </view>
             </view>
           </view>
         </view>
@@ -662,7 +665,7 @@ export default {
   font-size: 24rpx;
   /* position: relative; */
 }
-.wxc-calendar .content .a-month .line .col .day .tag{
+.wxc-calendar .content .a-month .line .col .tag{
   /* position: absolute; */
   display: inline-block;
   text-align: center;
@@ -703,12 +706,16 @@ export default {
 
 .wxc-calendar .content .a-month .line .info{
   width: 100%;
+  height: 30rpx;
   font-size: 20rpx;
   color: #888;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
   text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 </style>
