@@ -43,6 +43,8 @@ export default {
       },
       '2017-05-01': {
         replace: '劳',
+        replace_disable: '劳',
+        replace_selected: '劳',
         tag: '休',
         rtext: '￥110.11'
         

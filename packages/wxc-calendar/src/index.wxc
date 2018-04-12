@@ -2,48 +2,54 @@
   <wxc-popup animation-mode="{{enterDirectionClass}}" align="{{enterDirectionClass}}" class="_c_pop" locked="true">
 
     <view class="wxc-calendar">
-      <view class="top">
-        <view class="header">
-          <wxc-icon color="{{color}}" size="22" type="close" bindtap="hide"></wxc-icon>
-          <view class="title">{{title}}</view>
-          <view style="visibility: {{selected.length > 0 ? 'visible' : 'hidden'}}; color: {{color}};" class="clear-btn" bindtap="clearSelect">清除</view>
-        </view>
-        <view class="week-panel">
-          <view wx:for="{{weekdaysMin}}" wx:key="{{index}}">{{item}}</view>
-        </view>
-      </view>
-      
-      <scroll-view scroll-y class="content" scroll-top="{{scrollTop}}" lower-threshold="400" bindscrolltolower="scrollToLower">
-        <view wx:for="{{dayMap}}" class="a-month" wx:key="{{item.title}}">
-          <view class="title">
-            {{item.title}}
-          </view>
-
-          <view wx:for="{{item.days}}" wx:for-item="line" class="line {{rowSize}}" wx:key="{{item.title}}">
-            <view wx:for="{{line}}" wx:for-item="lineItem" wx:key="{{lineItem.year}}-{{lineItem.month}}-{{lineItem.day}}" class="col {{weekIndex === 0 || weekIndex === 6 ? 'gray' : ''}}" wx:for-index="weekIndex">
-              <view style="{{extraData.selected[lineItem.key] ? 'background: ' + color + ';' : ''}}" class="day {{lineItem.type}} {{extraData.selected[lineItem.key]}} {{dateExtra[lineItem.key].disable === true ? 'disable' : ''}}" data-day="{{lineItem.day}}" data-month="{{lineItem.month}}" data-year="{{lineItem.year}}" bindtap="select" wx:if="{{lineItem.type !== 'hidden'}}" >
-                {{dateExtra[lineItem.key].replace ? dateExtra[lineItem.key].replace : lineItem.day}}
-                <!-- <text wx:if="{{dateExtra[lineItem.key].tag}}" class="tag" style="background: {{color}}; color: {{fontColor}}">{{dateExtra[lineItem.key].tag}}</text> -->
-              </view>
-              <view class="info">
-                <rich-text wx:if="{{lineItem.type !== 'hidden'}}" nodes="{{dateExtra[lineItem.key].rtext ? dateExtra[lineItem.key].rtext : ''}}"></rich-text>
-                <text wx:if="{{dateExtra[lineItem.key].tag}}" class="tag" style="background: {{color}}; color: {{fontColor}}">{{dateExtra[lineItem.key].tag}}</text>
-              </view>
+        <view class="top">
+            <view class="header">
+                <wxc-icon color="{{color}}" size="22" type="close" bindtap="hide"></wxc-icon>
+                <view class="title">{{title}}</view>
+                <view style="visibility: {{selected.length > 0 ? 'visible' : 'hidden'}}; color: {{color}};" class="clear-btn" bindtap="clearSelect">清除</view>
             </view>
-          </view>
+            <view class="week-panel">
+                <view wx:for="{{weekdaysMin}}" wx:key="{{index}}">{{item}}</view>
+            </view>
         </view>
-    
-      </scroll-view>
-      <view class="confirm-panel" wx:if="{{selected.length > 0}}">
-        <view wx:if="{{type !== 'one'}}" class="box">
-          <view>{{returnData[0]}}</view>
-          <view>{{returnData[1]}}</view>
+
+        <scroll-view scroll-y class="content" scroll-top="{{scrollTop}}" lower-threshold="400" bindscrolltolower="scrollToLower">
+            <view wx:for="{{dayMap}}" class="a-month" wx:key="{{item.title}}">
+                <view class="title">
+                    {{item.title}}
+                </view>
+
+                <view wx:for="{{item.days}}" wx:for-item="line" class="line {{rowSize}}" wx:key="{{item.title}}">
+                    <view wx:for="{{line}}" wx:for-item="lineItem" wx:key="{{lineItem.year}}-{{lineItem.month}}-{{lineItem.day}}" class="col {{weekIndex === 0 || weekIndex === 6 ? 'gray' : ''}}" wx:for-index="weekIndex">
+                        <view style="{{extraData.selected[lineItem.key] ? 'background: ' + color + '; color: '+ fontColor +';' : ''}}" class="day {{lineItem.type}} {{extraData.selected[lineItem.key]}} {{dateExtra[lineItem.key].disable === true ? 'disable' : ''}}" data-day="{{lineItem.day}}" data-month="{{lineItem.month}}" data-year="{{lineItem.year}}" bindtap="select" wx:if="{{lineItem.type !== 'hidden'}}">
+                          <!-- 没有替换标签 -->
+                          <view wx:if="{{!dateExtra[lineItem.key].replace}}">{{lineItem.day}}</view>
+                          <!-- 有替换标签 - 正常态 -->
+                          <rich-text wx:if="{{!dateExtra[lineItem.key].disable && lineItem.type != 'disable' && dateExtra[lineItem.key].replace && !extraData.selected[lineItem.key]}}" nodes="{{dateExtra[lineItem.key].replace}}"></rich-text>
+                          <!-- 有替换标签 - 禁止态 -->
+                          <rich-text wx:if="{{(dateExtra[lineItem.key].disable || lineItem.type == 'disable') && dateExtra[lineItem.key].replace_disable}}" nodes="{{dateExtra[lineItem.key].replace_disable}}"></rich-text>
+                          <!-- 有替换标签 - 选中态 -->
+                          <rich-text wx:if="{{dateExtra[lineItem.key].replace_selected && extraData.selected[lineItem.key]}}" nodes="{{dateExtra[lineItem.key].replace_selected}}"></rich-text>
+                        </view>
+                        <view class="info">
+                            <rich-text wx:if="{{lineItem.type !== 'hidden'}}" nodes="{{dateExtra[lineItem.key].rtext ? dateExtra[lineItem.key].rtext : ''}}"></rich-text>
+                            <text wx:if="{{dateExtra[lineItem.key].tag}}" class="tag" style="background: {{color}}; color: {{fontColor}}">{{dateExtra[lineItem.key].tag}}</text>
+                        </view>
+                    </view>
+                </view>
+            </view>
+
+        </scroll-view>
+        <view class="confirm-panel" wx:if="{{selected.length > 0}}">
+            <view wx:if="{{type !== 'one'}}" class="box">
+                <view>{{returnData[0]}}</view>
+                <view>{{returnData[1]}}</view>
+            </view>
+            <view class="btn" style="background: {{color}}; color: {{fontColor}}" bindtap="ok">{{(type === 'one' || returnData.length == 2) ? '确定' : '选当天'}}</view>
         </view>
-        <view class="btn" style="background: {{color}}; color: {{fontColor}}" bindtap="ok">{{(type === 'one' || returnData.length == 2) ? '确定' : '选当天'}}</view>
-      </view>
     </view>
-    
-  </wxc-popup>
+
+</wxc-popup>
   
 </template>
 
@@ -612,9 +618,10 @@ export default {
 }
 
 .wxc-calendar .confirm-panel .btn.disable{
-  color: #bbb;
-  background: #ddd;
+  color: #bbb !important;
+  background: #ddd !important;
 }
+
 .wxc-calendar .content .a-month{
   box-sizing: border-box;
   padding: 0 20rpx;

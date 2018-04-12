@@ -20,7 +20,7 @@ $ min install wxc-calendar
 |`title`               | 标题         | 日期选择 |
 |`type`                | 选择类型 <br>one: 单日 <br>range: 日期区间         | range |
 |`defaultDate`         | 日历表开始渲染的日期<br>类型： (`Date` or `String`)        | new Date() |
-|`dateExtra`           | 日期扩展数据，<br>类型为object<br>其中<br>key 为YYYY-MM-DD<br>value项含：<br>- rtext：底部数据<br>- disable：禁止<br>- replace：替换文本<br>- tag：角标内容          | {} |
+|`dateExtra`           | 日期扩展数据，<br>类型为object<br>其中<br>key 为YYYY-MM-DD<br>value项含：<br>- rtext：底部数据<br>- disable：禁止<br>- replace：正常情况下替换文本<br>- replace_selected：选中时替换文本<br>- replace_disable：禁止时替换文本<br>- tag：角标内容          | {} |
 |`infiniteOpt`         | 无限滚动，<br>true会忽略<br>`initalMonths`参数        | false |
 |`initalMonths`        | 初始化显示月个数，<br>显示月份很多建议使用`infiniteOpt`        | 6 |
 |`maxDate`             | 最大可选日期        | null |
