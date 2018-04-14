@@ -455,6 +455,7 @@ export default {
         selected: [],
       })
       this.handleExtraData();
+      this.triggerEvent('onClear', []);
     },
 
     ok() {
